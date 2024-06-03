@@ -1,0 +1,8 @@
+Blue Ocean (physical properties from 1992-2022): https://data.marine.copernicus.eu/product/GLOBAL_MULTIYEAR_PHY_ENS_001_031/description
+Blue Ocean (physical properties from 2023-2024): https://data.marine.copernicus.eu/product/GLOBAL_ANALYSISFORECAST_PHY_001_024/description
+
+Green Ocean (biogeochemical properties from 1992-2022): https://data.marine.copernicus.eu/product/GLOBAL_MULTIYEAR_BGC_001_029/description
+Green Ocean (biogeochemical properties from 2023-2024): https://data.marine.copernicus.eu/product/GLOBAL_ANALYSISFORECAST_BGC_001_028/description
+
+Coordinates:
+22°N, -107°W, -106°E, 21°21
