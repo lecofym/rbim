@@ -10,7 +10,8 @@
 
 pacman:: p_load('tidyverse', # Data wrangling
                 'ncdf4', # Read NetCDF files
-                'raster') # Extracting NetCDF data
+                'raster', # Extracting NetCDF data
+                gridExtra) # Multiple plots
 
 # Clean console
 rm(list = ls())
@@ -755,3 +756,159 @@ environ.data<- data.frame(Date = fechas,
 
 write.csv(environ.data, 'Data/Environmental_data.csv',
           row.names = F)
+
+
+# Time series graphs ####
+sub.environ.data <- environ.data %>% group_by(Date, Island) %>%
+  summarise(Temperature = mean(Temperature),
+            Salinity = mean(Salinity),
+            Chlorophyll = mean(Chlorophyll),
+            Iron = mean(Iron),
+            Nitrate = mean(Nitrate),
+            Phosphate = mean(Phosphate),
+            Silicate = mean(Silicate),
+            Oxygen = mean(Oxygen),
+            pH = mean(pH))
+
+# --------------------------------------------------- Temperature ####
+(temp.graph <- ggplot(sub.environ.data, aes(x = Date)) +
+  geom_line(aes(y = Temperature, color = Island), linewidth = 1,
+            alpha = 0.7, show.legend = F)+
+  scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+  labs(x = NULL,
+       y = 'Temperature (°C)')+
+  scale_y_continuous(limits = c(21, 32),
+                     breaks = seq(21, 32, by = 2.5))+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        text = element_text(size = 20)))
+
+
+# --------------------------------------------------- Salinity ####
+(sal.graph <- ggplot(sub.environ.data, aes(x = Date)) +
+   geom_line(aes(y = Salinity, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = 'Salinity (UPS)')+
+   scale_y_continuous(limits = c(31.5, 35.5),
+                      breaks = seq(31.5, 35.5, by = 1))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# --------------------------------------------------- Chlorophyll ####
+(chl.graph <- ggplot(sub.environ.data, aes(x = Date)) +
+   geom_line(aes(y = Chlorophyll, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Chlorophyll~(mg~m^{'-3'})))+
+   scale_y_continuous(limits = c(0, 0.6),
+                      breaks = seq(0, 0.6, by = 0.1))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------- Dissolved Iron ####
+(fe.graph <- ggplot(sub.environ.data, aes(x = Date)) +
+   geom_line(aes(y = Iron, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Dissolved~Iron~(mmol~m^{'-3'})))+
+   scale_y_continuous(limits = c(0, 0.004),
+                      breaks = seq(0, 0.004, by = 0.001))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------------- Nitrate ####
+(nit.graph <- ggplot(sub.environ.data, aes(x = Date)) +
+   geom_line(aes(y = Nitrate, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Nitrate~(mmol~m^{'-3'})))+
+   scale_y_continuous(limits = c(0, 0.3),
+                      breaks = seq(0, 0.3, by = 0.05))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------------ Phosphate ####
+(pho.graph <- ggplot(sub.environ.data, aes(x = Date)) +
+   geom_line(aes(y = Phosphate, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Phosphate~(mmol~m^{'-3'})))+
+   scale_y_continuous(limits = c(0, 1.5),
+                      breaks = seq(0, 1.5, by = 0.25))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------------ Silicate ####
+(si.graph <- ggplot(sub.environ.data, aes(x = Date)) +
+   geom_line(aes(y = Silicate, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Silicate~(mmol~m^{'-3'})))+
+   scale_y_continuous(limits = c(0.5, 7),
+                      breaks = seq(0.5, 7, by = 1.55))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ----------------------------------------------- Dissolved Oxygen ####
+(oxy.graph <- ggplot(sub.environ.data, aes(x = Date)) +
+   geom_line(aes(y = Oxygen, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = "Year",
+        y = expression(Dissolved~Oxygen~(mmol~m^{'-3'})))+
+   scale_y_continuous(limits = c(195, 230),
+                      breaks = seq(195, 230, by = 5))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# --------------------------------------------------------- pH ####
+(ph.graph <- ggplot(sub.environ.data, aes(x = Date)) +
+   geom_line(aes(y = pH, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = "Year",
+        y = 'pH')+
+   scale_y_continuous(limits = c(7.85, 8.1),
+                      breaks = seq(7.85, 8.1, by = 0.05))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+# Legend ####
+legend <- ggplot(sub.environ.data, aes(x = Date)) +
+  geom_line(aes(y = Temperature, color = Island), linewidth = 1,
+            alpha = 0.7)+
+  theme(panel.grid = element_blank(),
+        legend.text = element_text(size = 25),
+        legend.title = element_text(size = 25))
+
+legend <- cowplot:: get_legend(legend)
+
+all.plots <- grid.arrange(temp.graph, sal.graph, chl.graph, fe.graph,
+                          nit.graph, pho.graph, si.graph, oxy.graph,
+                          ph.graph, legend, nrow = 5)
+
+ggsave("Figures and Tables/Environmental_variables.tiff", all.plots,
+       width = 7000, height = 6000, units = 'px', dpi = 320,
+       bg= "white", compression = "lzw")
