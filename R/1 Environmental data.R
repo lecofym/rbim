@@ -21,7 +21,8 @@ shell('cls')
 # Create the object of the files to be used
 ncfiles<- c('Data/Blue Ocean 1993-2022.nc', 'Data/Salinity 2023-2024.nc',
             'Data/Temperature 2023-2024.nc', 'Data/Green Ocean 1993-2022.nc',
-            'Data/Chlorophyll.nc', 'Data/Nutrients.nc', 'Data/Oxygen.nc', 'Data/pH.nc')
+            'Data/Chlorophyll 2023-2024.nc', 'Data/Nutrients 2023-2024.nc',
+            'Data/Oxygen 2023-2024.nc', 'Data/pH 2023-2024.nc')
 
 
 # Blue Ocean (physical properties) ####
@@ -106,6 +107,16 @@ names(cmes.data$var)
 multi.band <- brick(ncfiles[3], varname = 'thetao')
 multi.band
 
+# Layer analysis ####
+fechas2 <- substr(names(multi.band), 2, 11) %>%
+  parse_date_time("Ymd")
+range(fechas2)
+
+# Merging dates and removing second dataset
+fechas <- c(fechas, fechas2)
+range(fechas)
+rm(fechas2)
+
 # Extracting values
 mean.temp2<-  raster:: extract(multi.band, coords,
                               fun = mean, na.rm = F)
@@ -171,7 +182,7 @@ sum(is.na(mean.sal))
 as_tibble(ncfiles)
 cmes.data <- nc_open(ncfiles[2])
 
-# Visualize temperature information
+# Visualize salinity information
 print(cmes.data)
 names(cmes.data$var)
 
@@ -198,3 +209,549 @@ mean.sal2[c(8, 10:11, 15:18), 3:18]<- mean.sal2[9, 3:18]
 # Merge databases and remove the second
 mean.sal <- cbind(mean.sal, mean.sal2[, -c(1:2)])
 rm(mean.sal2)
+
+
+# Green Ocean (biogeochemical properties) ####
+# -------------------------------------------------- Chlorophyll ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[4])
+
+# Visualize chlorophyll information
+print(cmes.data)
+names(cmes.data$var)
+
+# Multiple band ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[4], varname = 'chl')
+multi.band
+
+
+# Raster file analysis ####
+# Summary: mean and standard deviation
+polygon.mean <- calc(multi.band, fun = mean)
+polygon.mean
+
+polygon.sd <- calc(multi.band, fun = sd)
+polygon.sd
+
+# Multiple band plots
+plot(polygon.mean, main = "Average Chlorophyll")
+plot(polygon.sd, main = "Standard deviation Chlorophyll")
+
+# Extracting values from numeric model ####
+# Extracting values
+mean.chl<-  raster:: extract(multi.band, coords,
+                             fun = mean, na.rm = F)
+mean.chl<- data.frame(Comunidad = sites.coords[, 1],
+                      Sitio = sites.coords[, 2],
+                      mean.chl) %>%
+  distinct(Sitio, .keep_all = T)
+
+# Reviewing missing values
+sum(is.na(mean.chl))
+
+# -----------------------------------------------------------------
+# So far we have data from 1993-2022. Therefore we will continue
+# extracting the data for the next two years.
+# -----------------------------------------------------------------
+
+# ----------------------------------- Chlorophyll data 2023-2024 ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[5])
+
+# Visualize chlorophyll information
+print(cmes.data)
+names(cmes.data$var)
+
+
+# Multiple band: Chlorophyll (mg/m3) ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[5], varname = 'chl')
+multi.band
+
+# Extracting values
+mean.chl2<-  raster:: extract(multi.band, coords,
+                              fun = mean, na.rm = F)
+mean.chl2<- data.frame(Isla = sites.coords[, 1],
+                       Sitio = sites.coords[, 2],
+                       mean.chl2) %>%
+  distinct(Sitio, .keep_all = T)
+
+as_tibble(mean.chl2) %>% print(n = 10)
+sum(is.na(mean.chl2))
+
+# Merge databases and remove the second
+mean.chl <- cbind(mean.chl, mean.chl2[, -c(1:2)])
+rm(mean.chl2)
+
+
+# -------------------------------------- Nutrients: Dissolved Iron ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[4])
+
+# Visualize dissolved iron information
+print(cmes.data)
+names(cmes.data$var)
+
+# Multiple band ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[4], varname = 'fe')
+multi.band
+
+
+# Raster file analysis ####
+# Summary: mean and standard deviation
+polygon.mean <- calc(multi.band, fun = mean)
+polygon.mean
+
+polygon.sd <- calc(multi.band, fun = sd)
+polygon.sd
+
+# Multiple band plots
+plot(polygon.mean, main = "Average Dissolved Iron")
+plot(polygon.sd, main = "Standard deviation Dissolved Iron")
+
+# Extracting values from numeric model ####
+# Extracting values
+mean.fe<-  raster:: extract(multi.band, coords,
+                             fun = mean, na.rm = F)
+mean.fe<- data.frame(Comunidad = sites.coords[, 1],
+                      Sitio = sites.coords[, 2],
+                      mean.fe) %>%
+  distinct(Sitio, .keep_all = T)
+
+# Reviewing missing values
+sum(is.na(mean.fe))
+
+# -----------------------------------------------------------------
+# So far we have data from 1993-2022. Therefore we will continue
+# extracting the data for the next two years.
+# -----------------------------------------------------------------
+
+# ----------------------- Nutrients: Dissolved Iron data 2023-2024 ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[6])
+
+# Visualize dissolved iron information
+print(cmes.data)
+names(cmes.data$var)
+
+
+# Multiple band: Dissolved Iron (mmol/m3) ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[6], varname = 'fe')
+multi.band
+
+# Extracting values
+mean.fe2<-  raster:: extract(multi.band, coords,
+                              fun = mean, na.rm = F)
+mean.fe2<- data.frame(Isla = sites.coords[, 1],
+                       Sitio = sites.coords[, 2],
+                       mean.fe2) %>%
+  distinct(Sitio, .keep_all = T)
+
+as_tibble(mean.fe2) %>% print(n = 10)
+sum(is.na(mean.fe2))
+
+# Merge databases and remove the second
+mean.fe <- cbind(mean.fe, mean.fe2[, -c(1:2)])
+rm(mean.fe2)
+
+
+# -------------------------------------- Nutrients: Nitrate ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[4])
+
+# Visualize nitrate information
+print(cmes.data)
+names(cmes.data$var)
+
+# Multiple band ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[4], varname = 'no3')
+multi.band
+
+
+# Raster file analysis ####
+# Summary: mean and standard deviation
+polygon.mean <- calc(multi.band, fun = mean)
+polygon.mean
+
+polygon.sd <- calc(multi.band, fun = sd)
+polygon.sd
+
+# Multiple band plots
+plot(polygon.mean, main = "Average Nitrate")
+plot(polygon.sd, main = "Standard deviation Nitrate")
+
+# Extracting values from numeric model ####
+# Extracting values
+mean.nit<-  raster:: extract(multi.band, coords,
+                            fun = mean, na.rm = F)
+mean.nit<- data.frame(Comunidad = sites.coords[, 1],
+                     Sitio = sites.coords[, 2],
+                     mean.nit) %>%
+  distinct(Sitio, .keep_all = T)
+
+# Reviewing missing values
+sum(is.na(mean.nit))
+
+# -----------------------------------------------------------------
+# So far we have data from 1993-2022. Therefore we will continue
+# extracting the data for the next two years.
+# -----------------------------------------------------------------
+
+# ------------------------------ Nutrients: Nitrate data 2023-2024 ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[6])
+
+# Visualize nitrate information
+print(cmes.data)
+names(cmes.data$var)
+
+
+# Multiple band: Nitrate (mmol/m3) ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[6], varname = 'no3')
+multi.band
+
+# Extracting values
+mean.nit2<-  raster:: extract(multi.band, coords,
+                             fun = mean, na.rm = F)
+mean.nit2<- data.frame(Isla = sites.coords[, 1],
+                      Sitio = sites.coords[, 2],
+                      mean.nit2) %>%
+  distinct(Sitio, .keep_all = T)
+
+as_tibble(mean.nit2) %>% print(n = 10)
+sum(is.na(mean.nit2))
+
+# Merge databases and remove the second
+mean.nit <- cbind(mean.nit, mean.nit2[, -c(1:2)])
+rm(mean.nit2)
+
+
+# -------------------------------------- Nutrients: Phosphate ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[4])
+
+# Visualize phosphate information
+print(cmes.data)
+names(cmes.data$var)
+
+# Multiple band ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[4], varname = 'po4')
+multi.band
+
+
+# Raster file analysis ####
+# Summary: mean and standard deviation
+polygon.mean <- calc(multi.band, fun = mean)
+polygon.mean
+
+polygon.sd <- calc(multi.band, fun = sd)
+polygon.sd
+
+# Multiple band plots
+plot(polygon.mean, main = "Average Phosphate")
+plot(polygon.sd, main = "Standard deviation Phosphate")
+
+# Extracting values from numeric model ####
+# Extracting values
+mean.pho<-  raster:: extract(multi.band, coords,
+                             fun = mean, na.rm = F)
+mean.pho<- data.frame(Comunidad = sites.coords[, 1],
+                      Sitio = sites.coords[, 2],
+                      mean.pho) %>%
+  distinct(Sitio, .keep_all = T)
+
+# Reviewing missing values
+sum(is.na(mean.pho))
+
+# -----------------------------------------------------------------
+# So far we have data from 1993-2022. Therefore we will continue
+# extracting the data for the next two years.
+# -----------------------------------------------------------------
+
+# ---------------------------- Nutrients: Phosphate data 2023-2024 ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[6])
+
+# Visualize phosphate information
+print(cmes.data)
+names(cmes.data$var)
+
+
+# Multiple band: Phosphate (mmol/m3) ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[6], varname = 'po4')
+multi.band
+
+# Extracting values
+mean.pho2<-  raster:: extract(multi.band, coords,
+                              fun = mean, na.rm = F)
+mean.pho2<- data.frame(Isla = sites.coords[, 1],
+                       Sitio = sites.coords[, 2],
+                       mean.pho2) %>%
+  distinct(Sitio, .keep_all = T)
+
+as_tibble(mean.pho2) %>% print(n = 10)
+sum(is.na(mean.pho2))
+
+# Merge databases and remove the second
+mean.pho <- cbind(mean.pho, mean.pho2[, -c(1:2)])
+rm(mean.pho2)
+
+
+# -------------------------------------- Nutrients: Silicate ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[4])
+
+# Visualize silicate information
+print(cmes.data)
+names(cmes.data$var)
+
+# Multiple band ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[4], varname = 'si')
+multi.band
+
+
+# Raster file analysis ####
+# Summary: mean and standard deviation
+polygon.mean <- calc(multi.band, fun = mean)
+polygon.mean
+
+polygon.sd <- calc(multi.band, fun = sd)
+polygon.sd
+
+# Multiple band plots
+plot(polygon.mean, main = "Average Silicate")
+plot(polygon.sd, main = "Standard deviation Silicate")
+
+# Extracting values from numeric model ####
+# Extracting values
+mean.si<-  raster:: extract(multi.band, coords,
+                             fun = mean, na.rm = F)
+mean.si<- data.frame(Comunidad = sites.coords[, 1],
+                      Sitio = sites.coords[, 2],
+                      mean.si) %>%
+  distinct(Sitio, .keep_all = T)
+
+# Reviewing missing values
+sum(is.na(mean.si))
+
+# -----------------------------------------------------------------
+# So far we have data from 1993-2022. Therefore we will continue
+# extracting the data for the next two years.
+# -----------------------------------------------------------------
+
+# ---------------------------- Nutrients: Silicate data 2023-2024 ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[6])
+
+# Visualize silicate information
+print(cmes.data)
+names(cmes.data$var)
+
+
+# Multiple band: Silicate (mmol/m3) ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[6], varname = 'si')
+multi.band
+
+# Extracting values
+mean.si2<-  raster:: extract(multi.band, coords,
+                              fun = mean, na.rm = F)
+mean.si2<- data.frame(Isla = sites.coords[, 1],
+                       Sitio = sites.coords[, 2],
+                       mean.si2) %>%
+  distinct(Sitio, .keep_all = T)
+
+as_tibble(mean.si2) %>% print(n = 10)
+sum(is.na(mean.si2))
+
+# Merge databases and remove the second
+mean.si <- cbind(mean.si, mean.si2[, -c(1:2)])
+rm(mean.si2)
+
+
+# --------------------------------------------- Dissolved Oxygen ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[4])
+
+# Visualize dissolved oxygen information
+print(cmes.data)
+names(cmes.data$var)
+
+# Multiple band ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[4], varname = 'o2')
+multi.band
+
+
+# Raster file analysis ####
+# Summary: mean and standard deviation
+polygon.mean <- calc(multi.band, fun = mean)
+polygon.mean
+
+polygon.sd <- calc(multi.band, fun = sd)
+polygon.sd
+
+# Multiple band plots
+plot(polygon.mean, main = "Average Dissolved Oxygen")
+plot(polygon.sd, main = "Standard deviation Dissolved Oxygen")
+
+# Extracting values from numeric model ####
+# Extracting values
+mean.oxy<-  raster:: extract(multi.band, coords,
+                            fun = mean, na.rm = F)
+mean.oxy<- data.frame(Comunidad = sites.coords[, 1],
+                     Sitio = sites.coords[, 2],
+                     mean.oxy) %>%
+  distinct(Sitio, .keep_all = T)
+
+# Reviewing missing values
+sum(is.na(mean.oxy))
+
+# -----------------------------------------------------------------
+# So far we have data from 1993-2022. Therefore we will continue
+# extracting the data for the next two years.
+# -----------------------------------------------------------------
+
+# --------------------------------- Dissolved Oxygen data 2023-2024 ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[7])
+
+# Visualize dissolved oxygen information
+print(cmes.data)
+names(cmes.data$var)
+
+
+# Multiple band: Dissolved Oxygen (mmol/m3) ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[7], varname = 'o2')
+multi.band
+
+# Extracting values
+mean.oxy2<-  raster:: extract(multi.band, coords,
+                             fun = mean, na.rm = F)
+mean.oxy2<- data.frame(Isla = sites.coords[, 1],
+                      Sitio = sites.coords[, 2],
+                      mean.oxy2) %>%
+  distinct(Sitio, .keep_all = T)
+
+as_tibble(mean.oxy2) %>% print(n = 10)
+sum(is.na(mean.oxy2))
+
+# Merge databases and remove the second
+mean.oxy <- cbind(mean.oxy, mean.oxy2[, -c(1:2)])
+rm(mean.oxy2)
+
+
+# ------------------------------------------------------------ pH ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[4])
+
+# Visualize pH information
+print(cmes.data)
+names(cmes.data$var)
+
+# Multiple band ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[4], varname = 'ph')
+multi.band
+
+
+# Raster file analysis ####
+# Summary: mean and standard deviation
+polygon.mean <- calc(multi.band, fun = mean)
+polygon.mean
+
+polygon.sd <- calc(multi.band, fun = sd)
+polygon.sd
+
+# Multiple band plots
+plot(polygon.mean, main = "Average Dissolved pH")
+plot(polygon.sd, main = "Standard deviation pH")
+
+# Extracting values from numeric model ####
+# Extracting values
+mean.ph<-  raster:: extract(multi.band, coords,
+                             fun = mean, na.rm = F)
+mean.ph<- data.frame(Comunidad = sites.coords[, 1],
+                      Sitio = sites.coords[, 2],
+                      mean.ph) %>%
+  distinct(Sitio, .keep_all = T)
+
+# Reviewing missing values
+sum(is.na(mean.ph))
+
+# -----------------------------------------------------------------
+# So far we have data from 1993-2022. Therefore we will continue
+# extracting the data for the next two years.
+# -----------------------------------------------------------------
+
+# --------------------------------------------- pH data 2023-2024 ####
+# Open NetCDF file
+as_tibble(ncfiles)
+cmes.data <- nc_open(ncfiles[8])
+
+# Visualize pH information
+print(cmes.data)
+names(cmes.data$var)
+
+
+# Multiple band: pH ####
+# Create a raster object based on the NetCDF file
+multi.band <- brick(ncfiles[8], varname = 'ph')
+multi.band
+
+# Extracting values
+mean.ph2<-  raster:: extract(multi.band, coords,
+                              fun = mean, na.rm = F)
+mean.ph2<- data.frame(Isla = sites.coords[, 1],
+                       Sitio = sites.coords[, 2],
+                       mean.ph2) %>%
+  distinct(Sitio, .keep_all = T)
+
+as_tibble(mean.ph2) %>% print(n = 10)
+sum(is.na(mean.ph2))
+
+# Merge databases and remove the second
+mean.ph <- cbind(mean.ph, mean.ph2[, -c(1:2)])
+rm(mean.ph2)
+
+
+# Merge all datsets ####
+environ.data<- data.frame(Date = fechas,
+                          Island = rep(t(mean.temp[, 1]),
+                                          each =  length(fechas)),
+                          Site = rep(t(mean.temp[, 2]),
+                                     each =  length(fechas)),
+                          Temperature = c(t(mean.temp[, 3:378])),
+                          Salinity = c(t(mean.sal[, 3:378])),
+                          Chlorophyll = c(t(mean.chl[, 3:378])),
+                          Iron = c(t(mean.fe[, 3:378])),
+                          Nitrate = c(t(mean.nit[, 3:378])),
+                          Phosphate = c(t(mean.pho[, 3:378])),
+                          Silicate = c(t(mean.si[, 3:378])),
+                          Oxygen = c(t(mean.oxy[, 3:378])),
+                          pH = c(t(mean.ph[, 3:378])))
+
+write.csv(environ.data, 'Data/Environmental_data.csv',
+          row.names = F)
