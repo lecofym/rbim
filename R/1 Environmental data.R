@@ -760,15 +760,15 @@ write.csv(environ.data, 'Data/Environmental_data.csv',
 
 # Time series graphs ####
 sub.environ.data <- environ.data %>% group_by(Date, Island) %>%
-  summarise(Temperature = mean(Temperature),
-            Salinity = mean(Salinity),
-            Chlorophyll = mean(Chlorophyll),
-            Iron = mean(Iron),
-            Nitrate = mean(Nitrate),
-            Phosphate = mean(Phosphate),
-            Silicate = mean(Silicate),
-            Oxygen = mean(Oxygen),
-            pH = mean(pH))
+  reframe(Temperature = mean(Temperature),
+          Salinity = mean(Salinity),
+          Chlorophyll = mean(Chlorophyll),
+          Iron = mean(Iron),
+          Nitrate = mean(Nitrate),
+          Phosphate = mean(Phosphate),
+          Silicate = mean(Silicate),
+          Oxygen = mean(Oxygen),
+          pH = mean(pH)) %>% as.data.frame()
 
 # --------------------------------------------------- Temperature ####
 (temp.graph <- ggplot(sub.environ.data, aes(x = Date)) +
@@ -910,5 +910,162 @@ all.plots <- grid.arrange(temp.graph, sal.graph, chl.graph, fe.graph,
                           ph.graph, legend, nrow = 5)
 
 ggsave("Figures and Tables/Environmental_variables.tiff", all.plots,
+       width = 7000, height = 6000, units = 'px', dpi = 320,
+       bg= "white", compression = "lzw")
+
+
+# Time series anomalies graphs ####
+sub.environ.anom <- sub.environ.data %>% group_by(Island) %>%
+  reframe(Date = fechas,
+          Temperature = scale(Temperature),
+          Salinity = scale(Salinity),
+          Chlorophyll = scale(Chlorophyll),
+          Iron = scale(Iron),
+          Nitrate = scale(Nitrate),
+          Phosphate = scale(Phosphate),
+          Silicate = scale(Silicate),
+          Oxygen = scale(Oxygen),
+          pH = scale(pH))
+
+# --------------------------------------------------- Temperature ####
+(temp.graph <- ggplot(sub.environ.anom, aes(x = Date)) +
+   geom_line(aes(y = Temperature, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = 'Standarized SST')+
+   scale_y_continuous(limits = c(-2.5, 2),
+                      breaks = seq(-2.5, 2, by = 0.75))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# --------------------------------------------------- Salinity ####
+(sal.graph <- ggplot(sub.environ.anom, aes(x = Date)) +
+   geom_line(aes(y = Salinity, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = 'Standarized Salinity')+
+   scale_y_continuous(limits = c(-5.5, 2.5),
+                      breaks = seq(-5.5, 2.5, by = 1))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# --------------------------------------------------- Chlorophyll ####
+(chl.graph <- ggplot(sub.environ.anom, aes(x = Date)) +
+   geom_line(aes(y = Chlorophyll, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Standarized~Chlorophyll))+
+   scale_y_continuous(limits = c(-1.5, 9),
+                      breaks = seq(-1.5, 9, by = 1.75))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------- Dissolved Iron ####
+(fe.graph <- ggplot(sub.environ.anom, aes(x = Date)) +
+   geom_line(aes(y = Iron, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Standarized~Dissolved~Iron))+
+   scale_y_continuous(limits = c(-2.5, 4),
+                      breaks = seq(-2.5, 4, by = 1.25))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------------- Nitrate ####
+(nit.graph <- ggplot(sub.environ.anom, aes(x = Date)) +
+   geom_line(aes(y = Nitrate, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Standarized~Nitrate))+
+   scale_y_continuous(limits = c(-1, 16.5),
+                      breaks = seq(-1, 16.5, by = 2.5))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------------ Phosphate ####
+(pho.graph <- ggplot(sub.environ.anom, aes(x = Date)) +
+   geom_line(aes(y = Phosphate, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Standarized~Phosphate))+
+   scale_y_continuous(limits = c(-2, 4.5),
+                      breaks = seq(-2, 4.5, by = 1))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------------ Silicate ####
+(si.graph <- ggplot(sub.environ.anom, aes(x = Date)) +
+   geom_line(aes(y = Silicate, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Standarized~Silicate))+
+   scale_y_continuous(limits = c(-3.5, 5.5),
+                      breaks = seq(-3.5, 5.5, by = 3))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ----------------------------------------------- Dissolved Oxygen ####
+(oxy.graph <- ggplot(sub.environ.anom, aes(x = Date)) +
+   geom_line(aes(y = Oxygen, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = "Year",
+        y = expression(Standarized~Dissolved~Oxygen))+
+   scale_y_continuous(limits = c(-1.5, 3.5),
+                      breaks = seq(-1.5, 3.5, by = 1))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# --------------------------------------------------------- pH ####
+(ph.graph <- ggplot(sub.environ.anom, aes(x = Date)) +
+   geom_line(aes(y = pH, color = Island), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = "Year",
+        y = 'Standarized pH')+
+   scale_y_continuous(limits = c(-4, 2.5),
+                      breaks = seq(-4, 2.5, by = 1))+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+# Legend ####
+legend <- ggplot(sub.environ.anom, aes(x = Date)) +
+  geom_line(aes(y = Temperature, color = Island), linewidth = 1,
+            alpha = 0.7)+
+  theme(panel.grid = element_blank(),
+        legend.text = element_text(size = 25),
+        legend.title = element_text(size = 25))
+
+legend <- cowplot:: get_legend(legend)
+
+all.plots <- grid.arrange(temp.graph, sal.graph, chl.graph, fe.graph,
+                          nit.graph, pho.graph, si.graph, oxy.graph,
+                          ph.graph, legend, nrow = 5)
+
+ggsave("Figures and Tables/Environmental_anomalies.tiff", all.plots,
        width = 7000, height = 6000, units = 'px', dpi = 320,
        bg= "white", compression = "lzw")
