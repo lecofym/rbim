@@ -11,7 +11,7 @@
 pacman:: p_load('tidyverse', # Data wrangling
                 'ncdf4', # Read NetCDF files
                 'raster', # Extracting NetCDF data
-                gridExtra) # Multiple plots
+                'gridExtra') # Multiple plots
 
 # Clean console
 rm(list = ls())
@@ -738,7 +738,7 @@ mean.ph <- cbind(mean.ph, mean.ph2[, -c(1:2)])
 rm(mean.ph2)
 
 
-# Merge all datsets ####
+# Merge all datasets ####
 environ.data<- data.frame(Date = fechas,
                           Island = rep(t(mean.temp[, 1]),
                                           each =  length(fechas)),
@@ -757,6 +757,8 @@ environ.data<- data.frame(Date = fechas,
 write.csv(environ.data, 'Data/Environmental_data.csv',
           row.names = F)
 
+# Unload raster package to avoid confusion with tidyverse functions
+detach("package:raster", unload = TRUE)
 
 # Time series graphs ####
 sub.environ.data <- environ.data %>% group_by(Date, Island) %>%
@@ -925,7 +927,7 @@ sub.environ.anom <- sub.environ.data %>% group_by(Island) %>%
           Phosphate = scale(Phosphate),
           Silicate = scale(Silicate),
           Oxygen = scale(Oxygen),
-          pH = scale(pH))
+          pH = scale(pH)) %>% as.data.frame()
 
 # --------------------------------------------------- Temperature ####
 (temp.graph <- ggplot(sub.environ.anom, aes(x = Date)) +
@@ -1068,4 +1070,231 @@ all.plots <- grid.arrange(temp.graph, sal.graph, chl.graph, fe.graph,
 
 ggsave("Figures and Tables/Environmental_anomalies.tiff", all.plots,
        width = 7000, height = 6000, units = 'px', dpi = 320,
+       bg= "white", compression = "lzw")
+
+
+# Time series trends at RBIM ####
+# -------------------------------------------------- Temperature ####
+RBIM.trends <- environ.data %>% group_by(Date) %>%
+  reframe(Temperature = mean(Temperature), Salinity = mean(Salinity),
+          Chlorophyll = mean(Chlorophyll), Iron = mean(Iron),
+          Nitrate = mean(Nitrate), Phosphate = mean(Phosphate),
+          Silicate = mean(Silicate), Oxygen = mean(Oxygen),
+          pH = mean(pH)) %>% as.data.frame()
+
+plot(sst.trend <- RBIM.trends %>% select(Temperature) %>%
+  ts(., start = 1993, frequency = 12) %>% decompose())
+sst.trend <- scale(sst.trend$trend)
+sst.trend <- as.data.frame(sst.trend)
+
+
+# -------------------------------------------------- Salinity ####
+plot(sal.trend <- RBIM.trends %>% dplyr:: select(Salinity) %>%
+       ts(., start = 1993, frequency = 12) %>% decompose(type = 'multi'))
+sal.trend <- scale(sal.trend$trend)
+sal.trend <- as.data.frame(sal.trend)
+
+
+# -------------------------------------------------- Chlorophyll ####
+plot(chl.trend <- RBIM.trends %>% dplyr:: select(Chlorophyll) %>%
+       ts(., start = 1993, frequency = 12) %>% decompose(type = 'multi'))
+chl.trend <- scale(chl.trend$trend)
+chl.trend <- as.data.frame(chl.trend)
+
+
+# ---------------------------------------------- Dissolved Iron ####
+plot(fe.trend <- RBIM.trends %>% dplyr:: select(Iron) %>%
+       ts(., start = 1993, frequency = 12) %>% decompose(type = 'multi'))
+fe.trend <- scale(fe.trend$trend)
+fe.trend <- as.data.frame(fe.trend)
+
+
+# ----------------------------------------------------- Nitrate ####
+plot(nit.trend <- RBIM.trends %>% dplyr:: select(Nitrate) %>%
+       ts(., start = 1993, frequency = 12) %>% decompose(type = 'multi'))
+nit.trend <- scale(nit.trend$trend)
+nit.trend <- as.data.frame(nit.trend)
+
+
+# ----------------------------------------------------- Phosphate ####
+plot(pho.trend <- RBIM.trends %>% dplyr:: select(Phosphate) %>%
+       ts(., start = 1993, frequency = 12) %>% decompose(type = 'multi'))
+pho.trend <- scale(pho.trend$trend)
+pho.trend <- as.data.frame(pho.trend)
+
+
+# ----------------------------------------------------- Silicate ####
+plot(si.trend <- RBIM.trends %>% dplyr:: select(Silicate) %>%
+       ts(., start = 1993, frequency = 12) %>% decompose(type = 'multi'))
+si.trend <- scale(si.trend$trend)
+si.trend <- as.data.frame(si.trend)
+
+
+# --------------------------------------------- Dissolved Oxygen ####
+plot(oxy.trend <- RBIM.trends %>% dplyr:: select(Oxygen) %>%
+       ts(., start = 1993, frequency = 12) %>% decompose(type = 'multi'))
+oxy.trend <- scale(oxy.trend$trend)
+oxy.trend <- as.data.frame(oxy.trend)
+
+
+# ---------------------------------------------------------- pH ####
+plot(ph.trend <- RBIM.trends %>% dplyr:: select(pH) %>%
+       ts(., start = 1993, frequency = 12) %>% decompose(type = 'multi'))
+ph.trend <- scale(ph.trend$trend)
+ph.trend <- as.data.frame(ph.trend)
+
+
+# Merge all datasets ####
+trend.data <- data.frame(Date = RBIM.trends$Date,
+                         sst.trend, sal.trend, chl.trend, fe.trend,
+                         nit.trend, pho.trend, si.trend, oxy.trend,
+                         ph.trend)
+
+trend.data <- trend.data %>% na.omit() %>%
+  rename(Date = Date, Temperature = V1, Salinity = V1.1,
+         Chlorophyll = V1.2, Iron = V1.3, Nitrate = V1.4,
+         Phosphate = V1.5, Silicate = V1.6, Oxygen = V1.7, pH = V1.8)
+
+
+# Trend graphs ####
+# --------------------------------------------------- Temperature ####
+(temp.graph <- ggplot(trend.data, aes(x = Date)) +
+   geom_line(aes(y = Temperature), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = 'SST Trend')+
+   scale_y_continuous(limits = c(-2.5, 2.5),
+                      breaks = seq(-2.5, 2.5, by = 0.5))+
+   geom_hline(yintercept = 0)+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# --------------------------------------------------- Salinity ####
+(sal.graph <- ggplot(trend.data, aes(x = Date)) +
+   geom_line(aes(y = Salinity), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = 'Salinity Trend')+
+   scale_y_continuous(limits = c(-3, 2.5),
+                      breaks = seq(-3, 2.5, by = 0.5))+
+   geom_hline(yintercept = 0)+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# --------------------------------------------------- Chlorophyll ####
+(chl.graph <- ggplot(trend.data, aes(x = Date)) +
+   geom_line(aes(y = Chlorophyll), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Chlorophyll~Trend))+
+   scale_y_continuous(limits = c(-1, 5.5),
+                      breaks = seq(-1, 5.5, by = 0.5))+
+   geom_hline(yintercept = 0)+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------- Dissolved Iron ####
+(fe.graph <- ggplot(trend.data, aes(x = Date)) +
+   geom_line(aes(y = Iron), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Dissolved~Iron~Trend))+
+   scale_y_continuous(limits = c(-3, 2.5),
+                      breaks = seq(-3, 2.5, by = 0.5))+
+   geom_hline(yintercept = 0)+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------------- Nitrate ####
+(nit.graph <- ggplot(trend.data, aes(x = Date)) +
+   geom_line(aes(y = Nitrate), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Nitrate~Trend))+
+   scale_y_continuous(limits = c(-1, 5.5),
+                      breaks = seq(-1, 5.5, by = 0.5))+
+   geom_hline(yintercept = 0)+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------------ Phosphate ####
+(pho.graph <- ggplot(trend.data, aes(x = Date)) +
+   geom_line(aes(y = Phosphate), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Phosphate~Trend))+
+   scale_y_continuous(limits = c(-2, 3),
+                      breaks = seq(-2, 3, by = 1))+
+   geom_hline(yintercept = 0)+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ------------------------------------------------------ Silicate ####
+(si.graph <- ggplot(trend.data, aes(x = Date)) +
+   geom_line(aes(y = Silicate), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = NULL,
+        y = expression(Silicate~Trend))+
+   scale_y_continuous(limits = c(-3.5, 4),
+                      breaks = seq(-3.5, 4, by = 0.5))+
+   geom_hline(yintercept = 0)+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# ----------------------------------------------- Dissolved Oxygen ####
+(oxy.graph <- ggplot(trend.data, aes(x = Date)) +
+   geom_line(aes(y = Oxygen), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = "Year",
+        y = expression(Dissolved~Oxygen~Trend))+
+   scale_y_continuous(limits = c(-2, 3),
+                      breaks = seq(-2, 3, by = 0.5))+
+   geom_hline(yintercept = 0)+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+
+# --------------------------------------------------------- pH ####
+(ph.graph <- ggplot(trend.data, aes(x = Date)) +
+   geom_line(aes(y = pH), linewidth = 1,
+             alpha = 0.7, show.legend = F)+
+   scale_x_datetime(date_breaks = "2 years", date_labels = "%Y")+
+   labs(x = "Year",
+        y = 'pH Trend')+
+   scale_y_continuous(limits = c(-3, 2),
+                      breaks = seq(-3, 2, by = 0.5))+
+   geom_hline(yintercept = 0)+
+   theme_classic()+
+   theme(panel.grid = element_blank(),
+         text = element_text(size = 20)))
+
+all.plots <- grid.arrange(temp.graph, sal.graph, chl.graph, fe.graph,
+                          nit.graph, pho.graph, si.graph, oxy.graph,
+                          ph.graph, nrow = 3)
+
+ggsave("Figures and Tables/Environmental_trends.tiff", all.plots,
+       width = 10000, height = 6000, units = 'px', dpi = 320,
        bg= "white", compression = "lzw")
